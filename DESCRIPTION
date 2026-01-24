@@ -20,7 +20,7 @@ Author: Taehwa Choi [aut, cre],
     Susan Halabi [aut],
     Yuan Wu [aut],
     Hyotae Kim [aut]
-Maintainer: Taehwa Choi <tchoi@sungshin.ac.kr>
+Maintainer: Taehwa Choi <taehwa015@gmail.com>
 Description: Fitting the full likelihood proportional hazards model and
     extracting the residuals.
 URL: https://github.com/taehwa015/smlePH/

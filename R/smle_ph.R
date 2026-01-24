@@ -66,7 +66,6 @@ smle_ph = function(y,
       qq = seq(0,1,by=1/(nknots+1))[-c(1,nknots+2)]
       knots = quantile(ut,qq)
     }
-    # isp=iSpline(ut,degree=degree,knots=knots,intercept = FALSE)
     msp=mSpline(ut,degree=degree,knots=knots,intercept = FALSE)
     
     n = nrow(x)
@@ -95,7 +94,7 @@ smle_ph = function(y,
     gamma = theta[-(1:p)]
     haz = pmax(as.vector(msp%*%gamma),1e-5)
     Haz = cumsum(haz*diff(c(0,ut)))
-    list(coef = coef, like = slike(theta) ,msp = msp, isp=isp,scoef = gamma,
+    list(coef = coef, like = slike(theta) ,msp = msp, scoef = gamma,
          Haz = Haz, haz = haz, time = y)
   }
   if (any(y<0)) y = exp(y)
