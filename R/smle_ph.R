@@ -69,7 +69,7 @@ smle_ph = function(y,
     # isp=iSpline(ut,degree=degree,knots=knots,intercept = FALSE)
     msp=mSpline(ut,degree=degree,knots=knots,intercept = FALSE)
     
-    n = nrow(dat)
+    n = nrow(x)
     p = ncol(x)
     q = ncol(msp)
     slike = function(theta) {
@@ -113,7 +113,6 @@ smle_ph = function(y,
   exbeta=exp(drop(x%*%tmp$coef))
   a = -crossprod(x,x*tmp$Haz*exbeta)
   isp = apply(msp, 2, function(aa) cumsum(aa*diff(c(0,y))))
-  library(numDeriv)
   g1=d*x-x*tmp$Haz*exp(drop(x%*%tmp$coef))
   g2=d*(tmp$msp)/pmax(tmp$haz,min(tmp$haz[tmp$haz>0])) - isp*exp(drop(x%*%tmp$coef))
   A11=crossprod(g1)
