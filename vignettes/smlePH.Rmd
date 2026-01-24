@@ -1,61 +1,41 @@
 ---
-title: "Introduction to `smlePH` package"
-# output: rmarkdown::html_vignette
-author: 
-  - Susan Halabi
-  - Taehwa Choi
-  - Yuan Wu
-date: "`r format(Sys.time(), '%B %d, %Y')`"
-output:
-  pdf_document:
-    fig_caption: yes
-    toc: yes
-    toc_depth: 3
+title: "Getting started with `smlePH` package"
+output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Introduction to `smlePH` package}
+  %\VignetteIndexEntry{Getting started with `smlePH` package}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
-<script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  TeX: { equationNumbers: { autoNumber: "AMS" } }
-});
-</script>
-
+  
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%",
+  fig.width = 7,
+  fig.height = 4,
+  fig.align = "center",
+  dpi = 150
 )
 ```
 
-```{r setup}
-library(smlePH)
+
+## Overview
+
+`smlePH` is a R package to fit the proportional hazards model with the sieve maximum full likelihood estimation. Unlike the conventional partial likelihood approach, the full likelihood method utilizes whole likelihood information in estimating procedure. In this package, we provide two functions `smle_ph` and `smle_resid`. `smle_ph` fits the proportional hazards model and estimates the baseline cumulative hazard function. `smle_resid` estimates two types of residuals, (i) score residual for each covariate and (ii) deviance residual for linear combination of all covariates.
+
+## Installation
+
+
+The released version of `smlePH` package from CRAN is available in CRAN
+```r
+install.packages('smlePH')
+```
+
+and the development version is also available in Github 
+```r
+devtools::install_github(repo='taehwa015/smlePH')
 ```
 
 
-## Introduction
 
-`smlePH` is the R package to fit the proportional hazards model with a sieve-based maximum full likelihood approach.
-
-Assume that there are $n$ patients in a cohort. Denote $T_i$ as the survival time and $x_i$ as the $p$-dimensional covariates. We observe $(Y_i = \min(T_i, C_i), \delta_i = I(T_i < C_i))$ under the right-censoring, thus the effective sample consists of $\{Y_i = T_i \wedge C_i, \delta_i = I(T_i < C_i), x_i\}_{i=1}^n$.
-Let $\beta$ be the $p$-dimensional regression coefficient.
-We posit the PH model as follows
-\begin{equation}
-\label{eq:phmod}
-\Lambda(t|x_i) =  \Lambda_0(t) e^{\beta' x_i},~
-i=1,\ldots,n.
-\end{equation}
-where $\Lambda(t|x_i)$ and $\Lambda_0(t)$ are the conditional cumulative hazard function given $x_i$ and the baseline cumulative hazard function, respectively.
-
-Instead of using the partial likelihood approach (Cox, 1972), we utilize a full log-likelihood with respect to $(\beta,\Lambda)$ to estimate \eqref{eq:phmod},
-\begin{equation}
-\label{eq:fl}
-\ell(\beta,\Lambda) = \sum_{i=1}^n \delta_i 
-\{ \log \lambda_0(t_i) + \beta'x_i \} - \sum_{i=1}^n
-\Lambda_0(t_i) e^{\beta'x_i}.
-\end{equation}
-
-
-
-## References

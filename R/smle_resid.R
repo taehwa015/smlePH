@@ -16,10 +16,10 @@ NULL
 #' @return \code{smle_resid} returns a numeric vector (if \code{type = "deviance"}) or a matrix (if \code{type = "score"}) of residuals extracted from the \code{object}.
 #'
 #' @details
-#' see Halabi et al., (2024+) for detailed method explanation.
+#' see Choi et al., (2026+) for detailed method explanation.
 #'
 #' @references
-#' Halabi et al., (2024+) Sieve maximum full likelihood estimation for the proportional hazards model
+#' Choi et al., (2026+) Residual-Based Sieve Maximum Full Likelihood Estimation for the Proportional Hazards Model
 #'
 #'
 #' @examples
@@ -68,12 +68,15 @@ smle_resid = function(y,
   {
     id0 = which(d==0)
     id1 = which(d==1)
-    dev = NULL
-    tmp = Haz[id0]*exp(xbeta[id0])
-    dev[id0] = sign(tmp)*sqrt(2)*sqrt(abs(tmp))
-    tmp = -xbeta[id1] + log(pmax(1e-4,Haz[id1])) + Haz[id1]*exp(xbeta[id1]) -1
-    dev[id1] = sign(tmp)*sqrt(2)*sqrt(abs(tmp))
+    mu = pmax(Haz*exp(xbeta),1e-12)
+    dev = numeric(length(d))
+    dev[id0] = -sqrt(2*mu[id0])
+    tmp1 = log(1/mu[id1]) - (1-mu[id1])
+    tmp1 = pmax(tmp1, 0)      
+    dev[id1] = sign(1-mu[id1])*sqrt(2*tmp1)
     res = dev
   }
   res
 }
+
+# roxygen2::roxygenize()

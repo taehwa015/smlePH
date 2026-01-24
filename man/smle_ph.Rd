@@ -7,11 +7,11 @@
 smle_ph(y, d, x)
 }
 \arguments{
-\item{y}{survival time (> 0).}
+\item{y}{n-vector of survival time (> 0).}
 
-\item{d}{right-censoring indicator, \code{1}: observed; \code{0}: right-censored.}
+\item{d}{n-vector of right-censoring indicator, \code{1}: observed; \code{0}: right-censored.}
 
-\item{x}{p-dimensional covariates matrix.}
+\item{x}{p-dimensional matrix of covariates.}
 }
 \value{
 \code{smle_ph} returns a list containing the following components:
@@ -24,7 +24,7 @@ smle_ph(y, d, x)
 Fit the proportional hazards model with maximum full likelihood estimation. Sieve estimation is used for estimating the baseline hazard function.
 }
 \details{
-see Halabi et al., (2024+) for detailed method explanation.
+see Choi et al., (2026+) for detailed method explanation.
 }
 \examples{
 library(smlePH)
@@ -48,5 +48,5 @@ y = y[ord]; x = x[ord,]; d = d[ord]
 smle_ph(y = y, d = d, x = x)
 }
 \references{
-Halabi et al., (2024+) Sieve maximum full likelihood estimation for the proportional hazards model
+Choi et al., (2026+) Residual-Based Sieve Maximum Full Likelihood Estimation for the Proportional Hazards Model
 }

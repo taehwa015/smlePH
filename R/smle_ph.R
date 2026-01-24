@@ -7,9 +7,9 @@ NULL
 #' Fit the proportional hazards model with maximum full likelihood estimation. Sieve estimation is used for estimating the baseline hazard function.
 #'
 #'
-#' @param y survival time (> 0).
-#' @param d right-censoring indicator, \code{1}: observed; \code{0}: right-censored.
-#' @param x p-dimensional covariates matrix.
+#' @param y n-vector of survival time (> 0).
+#' @param d n-vector of right-censoring indicator, \code{1}: observed; \code{0}: right-censored.
+#' @param x p-dimensional matrix of covariates. 
 #'
 #' @return \code{smle_ph} returns a list containing the following components:
 #' \itemize{
@@ -18,10 +18,10 @@ NULL
 #' }
 #'
 #' @details
-#' see Halabi et al., (2024+) for detailed method explanation.
+#' see Choi et al., (2026+) for detailed method explanation.
 #'
 #' @references
-#' Halabi et al., (2024+) Sieve maximum full likelihood estimation for the proportional hazards model
+#' Choi et al., (2026+) Residual-Based Sieve Maximum Full Likelihood Estimation for the Proportional Hazards Model
 #'
 #'
 #' @examples
@@ -61,13 +61,15 @@ smle_ph = function(y,
     d = d[ord]
     x = as.matrix(as.matrix(x)[ord,])
     if (nknots == 0) {
-      knots = numeric(0)
+      knots = numeric(0) 
     } else {
       qq = seq(0,1,by=1/(nknots+1))[-c(1,nknots+2)]
       knots = quantile(ut,qq)
     }
-    msp = splines2::mSpline(ut,degree=degree,knots=knots,intercept = FALSE)
-    n = nrow(x)
+    # isp=iSpline(ut,degree=degree,knots=knots,intercept = FALSE)
+    msp=mSpline(ut,degree=degree,knots=knots,intercept = FALSE)
+    
+    n = nrow(dat)
     p = ncol(x)
     q = ncol(msp)
     slike = function(theta) {
@@ -78,49 +80,25 @@ smle_ph = function(y,
       xbeta=drop(x%*%beta)
       sum((d*(log(haz)+xbeta) - Haz*exp(xbeta)))
     }
-
-    theta0 = c(rep(0,p), cumsum(rep(1,q)))
+    theta0 = c(rep(0,p), (rep(1,q)))
+    ineqA = matrix(0,q,q)
+    for (i in 1:q) {
+      if (i == 1) ineqA[i,i] = 1
+      else ineqA[i,c(i-1,i)] = c(-1,1)
+    }
+    ineqA = cbind(matrix(0, q, p), ineqA)
+    ineqB = matrix(0, nrow=q)
+    ineqA = cbind(matrix(0,q,p),diag(1,q))
+    ineqB = matrix(0,nrow=q)
     theta = optim(theta0, slike,control = list(fnscale=-1))$par
     coef = theta[1:p]
     gamma = theta[-(1:p)]
     haz = pmax(as.vector(msp%*%gamma),1e-5)
     Haz = cumsum(haz*diff(c(0,ut)))
-    list(coef = coef, like = slike(theta), msp = msp, scoef = gamma,
+    list(coef = coef, like = slike(theta) ,msp = msp, isp=isp,scoef = gamma,
          Haz = Haz, haz = haz, time = y)
   }
-
-  var_func = function(y,
-                      d,
-                      x,
-                      fit,
-                      hn)
-  {
-    slike = function(theta)
-    {
-      beta = theta[1:p]
-      gamma = theta[-(1:p)]
-      haz = pmax(as.vector(msp%*%gamma),1e-5)
-      Haz = cumsum(haz*diff(c(0,y)))
-      xbeta=drop(x%*%beta)
-      ((d*(log(haz)+xbeta) - Haz*exp(xbeta)))
-    }
-    theta = c(fit$coef,fit$scoef)
-    msp = fit$msp
-    ord = order(y)
-    ut = y = y[ord]
-    d = d[ord]
-    x = as.matrix(as.matrix(x)[ord,])
-    n = nrow(x); p = ncol(x); q = length(theta) - p
-    cvec = diag(1, p+q)
-    A = matrix(0, n, p+q)
-    for (i in 1:(p+q)) {
-      A[,i] = slike(theta + hn*cvec[i,])
-    }
-    B = slike(theta)
-    Cmat = crossprod((A - B), (A - B))/hn^2
-    sqrt(diag(MASS::ginv( Cmat + diag(1e-4, p+q) )))[1:p]
-  }
-
+  if (any(y<0)) y = exp(y)
   ord = order(y)
   ut = y = y[ord]
   d = d[ord]
@@ -131,21 +109,27 @@ smle_ph = function(y,
   opt = as.numeric(grids[which.min(val),])
   tmp = phfunc_sieve(y, d, x, opt[1], opt[2])
   tmp$opt = opt
-  tmp$se = var_func(y, d, x, tmp,hn=0.1*nrow(x)^(-1/2))
-
+  msp = tmp$msp
+  exbeta=exp(drop(x%*%tmp$coef))
+  a = -crossprod(x,x*tmp$Haz*exbeta)
+  isp = apply(msp, 2, function(aa) cumsum(aa*diff(c(0,y))))
+  library(numDeriv)
+  g1=d*x-x*tmp$Haz*exp(drop(x%*%tmp$coef))
+  g2=d*(tmp$msp)/pmax(tmp$haz,min(tmp$haz[tmp$haz>0])) - isp*exp(drop(x%*%tmp$coef))
+  A11=crossprod(g1)
+  A12=crossprod(g1,g2)
+  A21=t(A12)
+  A22=crossprod(g2)
+  tmp$se = sqrt(diag(solve((A11-A12%*%solve(A22)%*%A21))))
+  
   coef.smr = data.frame("Coefficients" = tmp$coef,
-                        "Std.Err"= tmp$se,
-                        "T0" = abs(tmp$coef/tmp$se),
-                        "p-value" = pnorm(abs(tmp$coef/tmp$se),
+                        "Std. Error"= tmp$se,
+                        "t statistic" = abs(tmp$coef/tmp$se),
+                        "Two-sided p-value" = 2*pnorm(abs(tmp$coef/tmp$se),
                                           lower.tail = FALSE))
   c.haz = data.frame("chaz" = tmp$Haz, "time" = tmp$time)
   res = list("Coef" = round(coef.smr, 3), "Cum.hazard" = c.haz)
   res
 }
 
-
-
 # roxygen2::roxygenize()
-# devtools::build_manual()
-# devtools::check(cran=TRUE)
-# https://win-builder.r-project.org/upload.aspx

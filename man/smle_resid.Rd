@@ -24,7 +24,7 @@ smle_resid(y, d, x, fit, type = c("score", "deviance"))
 This function extracts residuals of the full likelihood proportional hazards model estimated by the sieve estimation. Deviance-type and score-type residuals are available.
 }
 \details{
-see Halabi et al., (2024+) for detailed method explanation.
+see Choi et al., (2026+) for detailed method explanation.
 }
 \examples{
 \dontshow{
@@ -54,5 +54,5 @@ smle_resid(y = y, d = d, x = x, fit = fit, type = "deviance")
 smle_resid(y = y, d = d, x = x, fit = fit, type = "score")
 }
 \references{
-Halabi et al., (2024+) Sieve maximum full likelihood estimation for the proportional hazards model
+Choi et al., (2026+) Residual-Based Sieve Maximum Full Likelihood Estimation for the Proportional Hazards Model
 }
